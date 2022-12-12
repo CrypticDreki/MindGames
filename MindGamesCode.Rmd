@@ -1,0 +1,1104 @@
+---
+title: "Mental Clustering"
+author: "Alex"
+date: "2022-11-15"
+output: html_document
+---
+# Bringing in the study data in its entirety
+```{r}
+data <- read.csv('GamingStudy_data.csv')
+library(ggplot2)
+```
+
+
+
+# Cleaning The Data 
+
+# Playstyle
+
+```{r , results='hide'}
+summary(as.factor(data$Playstyle))
+```
+
+Lot's of values, let's create some new binary columns
+
+```{r, results='hide'}
+  playstyle_multiplayer <- rep(0 , nrow(data))
+  playstyle_multiplayer[grep("multiplayer", data$Playstyle, ignore.case = TRUE)] <- 1
+  playstyle_multiplayer[grep("multi", data$Playstyle, ignore.case = TRUE)] <- 1
+  playstyle_multiplayer[grep("team", data$Playstyle, ignore.case = TRUE)] <- 1
+  
+  playstyle_singleplayer <- rep(0 , nrow(data))
+  playstyle_singleplayer[grep("single", data$Playstyle, ignore.case = TRUE)] <- 1
+  playstyle_singleplayer[grep("solo", data$Playstyle, ignore.case = TRUE)] <- 1
+  playstyle_singleplayer[grep("alone", data$Playstyle, ignore.case = TRUE)] <- 1
+  
+  playstyle_friends <- rep(0 , nrow(data))
+  playstyle_friends[grep("friend", data$Playstyle, ignore.case = TRUE)] <- 1
+  playstyle_friends[grep("partner", data$Playstyle, ignore.case = TRUE)] <- 1
+  
+  summary(as.factor(playstyle_multiplayer))
+  summary(as.factor(playstyle_singleplayer))
+  summary(as.factor(playstyle_friends))
+  
+
+```
+
+Investigate those with no value from above code:
+```{r}
+data$Playstyle[which(playstyle_friends == 0 & 
+        playstyle_multiplayer == 0 &
+        playstyle_singleplayer == 0)]
+
+```
+
+All of the above looks like a valid answer
+
+
+```{r, results='hide'}
+playstyle_all <- rep(0, nrow(data))
+  playstyle_all[grep("mix", data$Playstyle, ignore.case = TRUE)] <- 1
+  playstyle_all[grep("everything", data$Playstyle, ignore.case = TRUE)] <- 1
+  playstyle_all[grep("all", data$Playstyle, ignore.case = TRUE)] <- 1
+  
+  summary(as.factor(playstyle_all))
+```
+
+Investigate those with no value from above code:
+```{r}
+head(data$Playstyle[which(playstyle_friends == 0 & 
+        playstyle_multiplayer == 0 &
+        playstyle_singleplayer == 0&
+        playstyle_all == 0)], 10)
+
+```
+Only 23 people not included in any. Given their answers we were as accurate as possible with categorizing.
+
+
+# Why do they game?
+
+```{r , results='hide'}
+summary(as.factor(data$whyplay))
+```
+
+A wide variety of answers. Lets try to pin point most of them and sort into categories.
+
+
+```{r , results='hide'}
+why_fun <- rep(0, nrow(data))
+why_fun[grep("fun", data$whyplay, ignore.case = TRUE)] <- 1
+
+why_improving <- rep(0, nrow(data))
+why_improving[grep("improving", data$whyplay, ignore.case = TRUE)] <- 1
+why_improving[grep("learning", data$whyplay, ignore.case = TRUE)] <- 1
+
+why_winning <- rep(0, nrow(data))
+why_winning[grep("win", data$whyplay, ignore.case = TRUE)] <- 1
+why_winning[grep("comp", data$whyplay, ignore.case = TRUE)] <- 1
+why_winning[grep("well", data$whyplay, ignore.case = TRUE)] <- 1
+
+why_relaxing <- rep(0, nrow(data))
+why_relaxing[grep("relaxing", data$whyplay, ignore.case = TRUE)] <- 1
+
+why_all <- rep(0, nrow(data))
+why_all[grep("all", data$whyplay, ignore.case = TRUE)] <- 1
+why_all[grep("4", data$whyplay, ignore.case = TRUE)] <- 1
+why_all[grep("everything", data$whyplay, ignore.case = TRUE)] <- 1
+```
+
+
+```{r , results='hide'}
+summary(as.factor(why_fun))
+summary(as.factor(why_improving))
+summary(as.factor(why_winning))
+summary(as.factor(why_relaxing))
+summary(as.factor(why_all))
+```
+
+Investigate those with no value from above code:
+```{r}
+head(data$whyplay[which(why_fun == 0 & 
+        why_improving == 0 &
+        why_winning == 0 &
+        why_relaxing == 0 &
+        why_all == 0)], 10)
+```
+Looks good. Anything not included seems like a need for mental stimulation, escape, or random answers
+
+
+```{r , results='hide'}
+summary(as.factor(data$earnings))
+```
+
+Seems like people confused earnings and why they play. Lots of answers were based on why the gamer plays, what to they get out of it. Which is a fine interpretation, however I don't believe that's what the question was trying to figure out. I want to sort it into those who answered the with the default multiple choice answers, then add fun as another category, since many filled in the blank with such answer.
+
+```{r , results='hide'}
+earnings_fun <- rep(0, nrow(data))
+earnings_fun[grep("fun", data$earnings, ignore.case = TRUE)] <- 1
+
+earnings_earn_a_little <- rep(0, nrow(data))
+earnings_earn_a_little[grep("earn a little", data$earnings, ignore.case = TRUE)] <- 1
+
+earnings_earn_a_living <- rep(0, nrow(data))
+earnings_earn_a_living[grep("earn a living", data$earnings, ignore.case = TRUE)] <- 1
+
+earnings_elo <- rep(0, nrow(data))
+earnings_elo[grep("elo", data$earnings, ignore.case = TRUE)] <- 1
+earnings_elo[grep("lp", data$earnings, ignore.case = TRUE)] <- 1
+earnings_elo[grep("rank", data$earnings, ignore.case = TRUE)] <- 1
+```
+
+
+```{r , results='hide'}
+summary(as.factor(earnings_fun))
+summary(as.factor(earnings_earn_a_little))
+summary(as.factor(earnings_earn_a_living ))
+summary(as.factor(earnings_elo))
+```
+
+Investigate those with no value from above code:
+```{r}
+head(data$earnings[which(earnings_fun == 0 & 
+        earnings_earn_a_little == 0 &
+        earnings_earn_a_living == 0 &
+        earnings_elo == 0)], 10)
+```
+The majority of those with no value answered why they play, not what they earn. So I have sorted best I can given the response purpose. 
+
+Add columns to dataset:
+
+```{r}
+data <- cbind.data.frame(data, playstyle_multiplayer, playstyle_singleplayer, playstyle_friends,
+                         playstyle_all,why_fun, why_improving, why_winning, why_relaxing,
+                         why_all, earnings_fun, earnings_earn_a_little, earnings_earn_a_living,
+                         earnings_elo)
+```
+
+
+## Fix hours
+
+Removing nulls as well as those who are magically able to play over 200 hours a week. I believe some people answered in minutes rather than hours. But for me to try and interpret larger values as minutes and convert them to hours, I could be altering someone's answer who truly plays 120 hours a week. To avoid this, I didn't do any conversions. 
+```{r , results='hide'}
+new_data <- data[which(data$Hours <= 200),] #removed the 30 nulls
+```
+
+```{r , results='hide'}
+use_data <- new_data[, c(1:18, 23:48, 51:68)] #removing the unwanted columns and 'fill in the blank'
+
+```
+
+## Fix NA's
+```{r , results='hide'}
+summary(use_data)
+use_data <- na.omit(use_data) #cluster doesn't like NAs
+```
+
+# Looking at the data features
+
+```{r}
+viz_1 <- ggplot(use_data, aes(x = Gender)) + 
+  geom_bar(alpha = 0.5, position = "dodge") + 
+    theme_set(theme_bw(base_size = 22) ) + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), 
+        panel.background = element_blank()) + 
+  labs(x = "Gender", y = 'Number of Samples', title = 'Count of Samples by Gender') 
+viz_1
+```
+
+```{r}
+viz_2 <- hist(use_data$Age, main="Histogram of Age of Survey Takers",
+xlab="Age")
+viz_2
+```
+
+
+## Clustering
+
+```{r, results='hide'}
+library(tidyr) 
+library(cluster)
+library(factoextra) # clustering algorithms & visualization
+library(sparcl) # Sparse Clustering
+```
+
+# Scale the dataset for clustering
+```{r, results='hide'}
+for_clust <- use_data[,c(3:15, 20:36, 45:47)]
+summary(for_clust)
+
+sdata <- data.frame(scale(for_clust[,-c(8)])) #remove GADE (categorical), should've removed before
+      
+summary(sdata) #check for scale plus looking at NA's... 
+```
+
+# Choose optimal cluster number for the dataset (May not be clear)
+
+Silhouette plot
+```{r}
+# Create silhouette plot summary
+fviz_nbclust(sdata[1:32],  
+             kmeans,# Set clustering method
+             method = "silhouette") # Set evaluation method
+```
+
+This says to use 2 clusters; however, 4 is the next up tick (barely). I think I'll go with 4 instead of 2. People are too complex for me to agree with 2 clusters. It wouldn't pick up on people who aren't super anxious, but still have anxiety. I think all degrees of answers for these surveys should be viewed and taken into consideration. It is a poor choice to force them into 2 clusters, this would be a hasty generalization.
+
+
+# Apply K-means clustering with optimal number of clusters
+
+```{r , results='hide'}
+set.seed(12345) 
+fit_1 <- kmeans(x = sdata[1:32], #These are the survey responses
+                centers = 4,  # Cluster number
+                nstart = 25, 
+                iter.max = 100 ) 
+```
+
+# View number of samples in each cluster
+
+```{r , results='hide'}
+# Extract clusters
+clusters_1 <- fit_1$cluster
+# Extract centers
+centers_1 <- fit_1$centers
+```
+
+```{r }
+# Check samples per cluster
+summary(as.factor(clusters_1))
+```
+
+
+
+# Undo the scaling
+
+```{r , results='hide'}
+
+centers_mod <- centers_1 
+for(i in 1:ncol(centers_1)){
+  centers_mod[,i] <- centers_mod[,i] * sd(for_clust[,colnames(centers_1)[i]])
+  centers_mod[,i] <- centers_mod[,i] + mean(for_clust[,colnames(centers_1)[i]])
+}
+
+
+# Create vector of clusters
+cluster <- c(1: 4)
+# Extract centers
+center_df <- data.frame(cluster, centers_mod) #see which cols I want to pull from
+
+```
+I chose to undo the scaling on the survey results after the clusters were determined for clarity. Since each survey is on a different scale (values and meanings), it is difficult to understand the scaled scores. So for the most accurate representation of the survey results, the scores are in normal form, and we will visualize each survey induvidually.
+
+
+# GAD Heat
+```{r , results='hide'}
+#For GAD
+# Reshape the data
+center_reshape <- gather(center_df, features, values, GAD1:GAD7)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_GAD <- ggplot(data = center_reshape,  
+                   aes(x = features, y = cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "blue",  
+                       mid = "white",  
+                       high = "red",  
+                       midpoint =0,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+# Generate plot
+#g_heat_GAD
+
+```
+
+# SPIN Heat
+```{r , results='hide'}
+#For SPIN
+# Reshape the data
+center_reshape <- gather(center_df, features, values, SPIN1:SPIN17)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_SPIN <- ggplot(data = center_reshape,  
+                   aes(x = features, y = cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "blue",  
+                       mid = "white",  
+                       high = "red",  
+                       midpoint =0,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+# Generate plot
+#g_heat_SPIN
+
+```
+
+## SWL Heat
+```{r , results='hide'}
+#For SWL
+# Reshape the data
+center_reshape <- gather(center_df, features, values, SWL1:SWL5)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_SWL <- ggplot(data = center_reshape,  
+                   aes(x = features, y = cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "blue",  
+                       mid = "white",  
+                       high = "red",  
+                       midpoint =4,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+# Generate plot
+#g_heat_SWL
+
+```
+
+```{r}
+g_heat_GAD
+g_heat_SPIN
+g_heat_SWL
+```
+
+GAD: Higher score = More anxious, Lower score = No anxiety
+
+* frequency: never to nearly every day (0-3)
+
+SPIN: Higher score = More social phobia, Low score = Doesn't apply/No phobia
+
+* How much a statement applies: Not at all to extremely (0-4)
+
+SWL: Higher score = High life satisfaction, Low score = low life satisfaction.
+
+* A statement given: Strongly disagree to Strongly agree (1-7)
+
+### Describing the clusters
+
+Cluster 1: 
+
+* high anxiety scores, high social phobia scores, low happiness scores
+* Lots of anxieties, lots of social phobia, as well as low satisfaction with life
+* Very anxious people that have a lot of social phobia and a poor outlook on life
+
+Cluster 2: 
+
+* low anxiety scores, slightly high social phobia scores, neutral happiness scores
+* Some anxieties, moderate social phobia, and some satisfaction with life
+* People with a low prevalence of anxiety, moderate social phobia, and some satisfaction with life
+
+
+Cluster 3: 
+
+* Very low anxiety scores, low social phobia scores, high happiness scores
+* minimal to no anxieties, rare social phobia , high satisfaction with life
+* People with rare anxiety, minimal social phobia, and a high life satisfaction
+
+Cluster 4: 
+
+* Moderate anxiety scores, slightly low phobia scores, low happiness scores
+* Some anxiety, rare to some social phobia, low satisfaction with life
+* People with moderate levels of anxiety, some social phobia tendencies, as well as low life satisfaction.
+
+
+
+## What are the features of each cluster and how to relate to gamer profile
+
+##assign cluster number to each participant
+```{r, results='hide'}
+clust_ID <- data.frame(clusters_1)
+
+final_data <- cbind.data.frame(clust_ID, use_data[,c(1, 16:19, 38:43, 50:62)])
+
+names(final_data)[1] <- "Cluster_ID"
+```
+
+## Break into clusters
+```{r, results='hide'}
+#Cluster 1
+Clust_1 <- data.frame(final_data[final_data$Cluster_ID == 1,])
+
+#Cluster 2
+Clust_2 <- data.frame(final_data[final_data$Cluster_ID == 2,])
+
+#Cluster 3
+Clust_3 <- data.frame(final_data[final_data$Cluster_ID == 3,])
+
+#Cluster 4
+Clust_4 <- data.frame(final_data[final_data$Cluster_ID == 4,])
+
+summary(as.factor(clusters_1)) #checking number if rows match how many in each cluster. They do.
+```
+
+
+
+
+## Cluster 1
+```{r, results='hide'}
+Cluster <- c(1, 2, 3, 4)
+Hours_played <- 0
+Hours_streamed <- 0
+Age <- 0
+Gender_Female <- 0
+Gender_Male <- 0
+Gender_Other <- 0
+Play_Multiplayer <- 0
+Play_Singleplayer <- 0
+Play_With_Friends <- 0
+Play_Fun <- 0
+Play_Win <- 0
+Play_Relax <- 0
+Play_All <- 0
+Earn_little <- 0
+Earn_living <- 0
+Console <- 0
+PC <- 0
+Mobile <- 0
+Employed <- 0
+Student_Uni <- 0
+Student_School <- 0
+Unemployed <- 0
+No_school <- 0
+HighSchool <- 0
+Bachelors <- 0
+Masters <- 0
+Ph_D <- 0
+
+Hours_played[1] <- median(Clust_1$Hours)
+Hours_streamed[1] <- median(Clust_1$streams)
+Age[1] <- median(Clust_1$Age)
+Gender_Female[1] <- round((table(Clust_1$Gender)[1]/nrow(Clust_1))*100, digits = 2)
+Gender_Male[1] <- round((table(Clust_1$Gender)[2]/nrow(Clust_1))*100, digits = 2)
+Gender_Other[1] <- round((table(Clust_1$Gender)[3]/nrow(Clust_1))*100, digits = 2)
+Play_Multiplayer[1] <- round((table(Clust_1$playstyle_multiplayer)[2]/nrow(Clust_1))*100, digits = 2)
+Play_Singleplayer[1] <- round((table(Clust_1$playstyle_singleplayer)[2]/nrow(Clust_1))*100, digits = 2)
+Play_With_Friends[1] <- round((table(Clust_1$playstyle_friends)[2]/nrow(Clust_1))*100, digits = 2)
+Play_Fun[1] <-round( (table(Clust_1$why_fun)[2]/nrow(Clust_1))*100, digits = 2)
+Play_Win[1] <-round((table(Clust_1$why_winning)[2]/nrow(Clust_1))*100, digits = 2)
+Play_Relax[1] <- round((table(Clust_1$why_relaxing)[2]/nrow(Clust_1))*100, digits = 2)
+Play_All[1] <- round((table(Clust_1$why_all)[2]/nrow(Clust_1))*100, digits = 2)
+Earn_little[1] <- round((table(Clust_1$earnings_earn_a_little)[2]/nrow(Clust_1))*100, digits = 2)
+Earn_living[1] <- round((table(Clust_1$earnings_earn_a_living)[2]/nrow(Clust_1))*100, digits = 2)
+Console[1] <- round((table(Clust_1$Platform)[1]/nrow(Clust_1))*100, digits = 2)
+PC[1] <- round((table(Clust_1$Platform)[2]/nrow(Clust_1))*100, digits = 2)
+Mobile[1] <- round((table(Clust_1$Platform)[3]/nrow(Clust_1))*100, digits = 2)
+Employed[1] <- round((table(Clust_1$Work)[1]/nrow(Clust_1))*100, digits = 2)
+Student_Uni[1] <- round((table(Clust_1$Work)[2]/nrow(Clust_1))*100, digits = 2)
+Student_School[1] <- round((table(Clust_1$Work)[3]/nrow(Clust_1))*100, digits = 2)
+Unemployed[1] <- round((table(Clust_1$Work)[4]/nrow(Clust_1))*100, digits = 2)
+No_school[1] <- round((table(Clust_1$Degree)[4]/nrow(Clust_1))*100, digits = 2)
+HighSchool[1] <- round((table(Clust_1$Degree)[2]/nrow(Clust_1))*100, digits = 2)
+Bachelors[1] <- round((table(Clust_1$Degree)[1]/nrow(Clust_1))*100, digits = 2)
+Masters[1] <- round((table(Clust_1$Degree)[3]/nrow(Clust_1))*100, digits = 2)
+Ph_D[1] <- round((table(Clust_1$Degree)[5]/nrow(Clust_1))*100, digits = 2)
+```
+
+## Cluster 2
+```{r, results='hide'}
+Hours_played[2] <- median(Clust_2$Hours)
+Hours_streamed[2] <- median(Clust_2$streams)
+Age[2] <- median(Clust_2$Age)
+Gender_Female[2] <- round((table(Clust_2$Gender)[1]/nrow(Clust_2))*100, digits = 2)
+Gender_Male[2] <- round((table(Clust_2$Gender)[2]/nrow(Clust_2))*100, digits = 2)
+Gender_Other[2] <- round((table(Clust_2$Gender)[3]/nrow(Clust_2))*100, digits = 2)
+Play_Multiplayer[2] <- round((table(Clust_2$playstyle_multiplayer)[2]/nrow(Clust_2))*100, digits = 2)
+Play_Singleplayer[2] <- round((table(Clust_2$playstyle_singleplayer)[2]/nrow(Clust_2))*100, digits = 2)
+Play_With_Friends[2] <- round((table(Clust_2$playstyle_friends)[2]/nrow(Clust_2))*100, digits = 2)
+Play_Fun[2] <-round( (table(Clust_2$why_fun)[2]/nrow(Clust_2))*100, digits = 2)
+Play_Win[2] <-round((table(Clust_2$why_winning)[2]/nrow(Clust_2))*100, digits = 2)
+Play_Relax[2] <- round((table(Clust_2$why_relaxing)[2]/nrow(Clust_2))*100, digits = 2)
+Play_All[2] <- round((table(Clust_2$why_all)[2]/nrow(Clust_2))*100, digits = 2)
+Earn_little[2] <- round((table(Clust_2$earnings_earn_a_little)[2]/nrow(Clust_2))*100, digits = 2)
+Earn_living[2] <- round((table(Clust_2$earnings_earn_a_living)[2]/nrow(Clust_2))*100, digits = 2)
+Console[2] <- round((table(Clust_2$Platform)[1]/nrow(Clust_2))*100, digits = 2)
+PC[2] <- round((table(Clust_2$Platform)[2]/nrow(Clust_2))*100, digits = 2)
+Mobile[2] <- round((table(Clust_2$Platform)[3]/nrow(Clust_2))*100, digits = 2)
+Employed[2] <- round((table(Clust_2$Work)[1]/nrow(Clust_2))*100, digits = 2)
+Student_Uni[2] <- round((table(Clust_2$Work)[2]/nrow(Clust_2))*100, digits = 2)
+Student_School[2] <- round((table(Clust_2$Work)[3]/nrow(Clust_2))*100, digits = 2)
+Unemployed[2] <- round((table(Clust_2$Work)[4]/nrow(Clust_2))*100, digits = 2)
+No_school[2] <- round((table(Clust_2$Degree)[4]/nrow(Clust_2))*100, digits = 2)
+HighSchool[2] <- round((table(Clust_2$Degree)[2]/nrow(Clust_2))*100, digits = 2)
+Bachelors[2] <- round((table(Clust_2$Degree)[1]/nrow(Clust_2))*100, digits = 2)
+Masters[2] <- round((table(Clust_2$Degree)[3]/nrow(Clust_2))*100, digits = 2)
+Ph_D[2] <- round((table(Clust_2$Degree)[5]/nrow(Clust_2))*100, digits = 2)
+```
+
+## Cluster 3
+```{r, results='hide'}
+Hours_played[3] <- median(Clust_3$Hours)
+Hours_streamed[3] <- median(Clust_3$streams)
+Age[3] <- median(Clust_3$Age)
+Gender_Female[3] <- round((table(Clust_3$Gender)[1]/nrow(Clust_3))*100, digits = 2)
+Gender_Male[3] <- round((table(Clust_3$Gender)[2]/nrow(Clust_3))*100, digits = 2)
+Gender_Other[3] <- round((table(Clust_3$Gender)[3]/nrow(Clust_3))*100, digits = 2)
+Play_Multiplayer[3] <- round((table(Clust_3$playstyle_multiplayer)[2]/nrow(Clust_3))*100, digits = 2)
+Play_Singleplayer[3] <- round((table(Clust_3$playstyle_singleplayer)[2]/nrow(Clust_3))*100, digits = 2)
+Play_With_Friends[3] <- round((table(Clust_3$playstyle_friends)[2]/nrow(Clust_3))*100, digits = 2)
+Play_Fun[3] <-round( (table(Clust_3$why_fun)[2]/nrow(Clust_3))*100, digits = 2)
+Play_Win[3] <-round((table(Clust_3$why_winning)[2]/nrow(Clust_3))*100, digits = 2)
+Play_Relax[3] <- round((table(Clust_3$why_relaxing)[2]/nrow(Clust_3))*100, digits = 2)
+Play_All[3] <- round((table(Clust_3$why_all)[2]/nrow(Clust_3))*100, digits = 2)
+Earn_little[3] <- round((table(Clust_3$earnings_earn_a_little)[2]/nrow(Clust_3))*100, digits = 2)
+Earn_living[3] <- round((table(Clust_3$earnings_earn_a_living)[2]/nrow(Clust_3))*100, digits = 2)
+Console[3] <- round((table(Clust_3$Platform)[1]/nrow(Clust_3))*100, digits = 2)
+PC[3] <- round((table(Clust_3$Platform)[2]/nrow(Clust_3))*100, digits = 2)
+Mobile[3] <- round((table(Clust_3$Platform)[3]/nrow(Clust_3))*100, digits = 2)
+Employed[3] <- round((table(Clust_3$Work)[1]/nrow(Clust_3))*100, digits = 2)
+Student_Uni[3] <- round((table(Clust_3$Work)[2]/nrow(Clust_3))*100, digits = 2)
+Student_School[3] <- round((table(Clust_3$Work)[3]/nrow(Clust_3))*100, digits = 2)
+Unemployed[3] <- round((table(Clust_3$Work)[4]/nrow(Clust_3))*100, digits = 2)
+No_school[3] <- round((table(Clust_3$Degree)[4]/nrow(Clust_3))*100, digits = 2)
+HighSchool[3] <- round((table(Clust_3$Degree)[2]/nrow(Clust_3))*100, digits = 2)
+Bachelors[3] <- round((table(Clust_3$Degree)[1]/nrow(Clust_3))*100, digits = 2)
+Masters[3] <- round((table(Clust_3$Degree)[3]/nrow(Clust_3))*100, digits = 2)
+Ph_D[3] <- round((table(Clust_3$Degree)[5]/nrow(Clust_3))*100, digits = 2)
+```
+
+## Cluster 4
+```{r, results='hide'}
+Hours_played[4] <- median(Clust_4$Hours)
+Hours_streamed[4] <- median(Clust_4$streams)
+Age[4] <- median(Clust_4$Age)
+Gender_Female[4] <- round((table(Clust_4$Gender)[1]/nrow(Clust_4))*100, digits = 2)
+Gender_Male[4] <- round((table(Clust_4$Gender)[2]/nrow(Clust_4))*100, digits = 2)
+Gender_Other[4] <- round((table(Clust_4$Gender)[3]/nrow(Clust_4))*100, digits = 2)
+Play_Multiplayer[4] <- round((table(Clust_4$playstyle_multiplayer)[2]/nrow(Clust_4))*100, digits = 2)
+Play_Singleplayer[4] <- round((table(Clust_4$playstyle_singleplayer)[2]/nrow(Clust_4))*100, digits = 2)
+Play_With_Friends[4] <- round((table(Clust_4$playstyle_friends)[2]/nrow(Clust_4))*100, digits = 2)
+Play_Fun[4] <-round( (table(Clust_4$why_fun)[2]/nrow(Clust_4))*100, digits = 2)
+Play_Win[4] <-round((table(Clust_4$why_winning)[2]/nrow(Clust_4))*100, digits = 2)
+Play_Relax[4] <- round((table(Clust_4$why_relaxing)[2]/nrow(Clust_4))*100, digits = 2)
+Play_All[4] <- round((table(Clust_4$why_all)[2]/nrow(Clust_4))*100, digits = 2)
+Earn_little[4] <- round((table(Clust_4$earnings_earn_a_little)[2]/nrow(Clust_4))*100, digits = 2)
+Earn_living[4] <- round((table(Clust_4$earnings_earn_a_living)[2]/nrow(Clust_4))*100, digits = 2)
+Console[4] <- round((table(Clust_4$Platform)[1]/nrow(Clust_4))*100, digits = 2)
+PC[4] <- round((table(Clust_4$Platform)[2]/nrow(Clust_4))*100, digits = 2)
+Mobile[4] <- round((table(Clust_4$Platform)[3]/nrow(Clust_4))*100, digits = 2)
+Employed[4] <- round((table(Clust_4$Work)[1]/nrow(Clust_4))*100, digits = 2)
+Student_Uni[4] <- round((table(Clust_4$Work)[2]/nrow(Clust_4))*100, digits = 2)
+Student_School[4] <- round((table(Clust_4$Work)[3]/nrow(Clust_4))*100, digits = 2)
+Unemployed[4] <- round((table(Clust_4$Work)[4]/nrow(Clust_4))*100, digits = 2)
+No_school[4] <- round((table(Clust_4$Degree)[4]/nrow(Clust_4))*100, digits = 2)
+HighSchool[4] <- round((table(Clust_4$Degree)[2]/nrow(Clust_4))*100, digits = 2)
+Bachelors[4] <- round((table(Clust_4$Degree)[1]/nrow(Clust_4))*100, digits = 2)
+Masters[4] <- round((table(Clust_4$Degree)[3]/nrow(Clust_4))*100, digits = 2)
+Ph_D[4] <- round((table(Clust_4$Degree)[5]/nrow(Clust_4))*100, digits = 2)
+```
+
+## Combine
+```{r, results='hide'}
+Comparison_df <- data.frame(Cluster, Hours_played, Hours_streamed, Age, Gender_Female, Gender_Male,
+                            Gender_Other, Play_Multiplayer, Play_Singleplayer, Play_With_Friends,
+                            Play_Fun, Play_Win, Play_Relax, Play_All, Earn_little, Earn_living,
+                            Console, PC, Mobile, Employed, Student_Uni, Student_School, Unemployed,
+                            No_school, HighSchool, Bachelors, Masters, Ph_D)
+```
+
+## Heat map it out to compare values
+
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, Gender_Female:Ph_D)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "light blue",  
+                       mid = "blue",  
+                       high = "dark blue",  
+                       midpoint = 50,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+```
+
+```{r}
+g_heat
+```
+
+Shows which categories feature highest differences and which categories seem similar across all clusters.
+
+It looks like the proportions for most features have variation between the clusters. Since the values for some are nearer to 0 and others to 100, lets break down the heat map into sections for more clarity.
+
+### Lets break it down
+
+## Gender
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, Gender_Female:Gender_Other)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_Gender <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "light blue",  
+                       mid = "blue",  
+                       high = "dark blue",  
+                       midpoint = 50,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+```
+
+```{r}
+g_heat_Gender
+```
+
+
+Things of note:
+
+* Not much variation in gender. Going from cluster 1 to 4, there are a declining proportion of females and greater proportion of males. Gender other is highest for cluster 1 but otherwise very similar
+
+## Play Style
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, Play_Multiplayer:Play_With_Friends)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_PlayS <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "dark red",  
+                       mid = "Orange",  
+                       high = "dark blue",  
+                       midpoint = 50,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+```
+
+```{r}
+g_heat_PlayS
+```
+
+
+Very hard to see differences since the values are more similar and there's a wide range. Best to instead zoom in on each feature
+
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, Play_Multiplayer:Play_Multiplayer)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_Multi <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "light blue",  
+                       mid = "blue",  
+                       high = "dark blue",  
+                       midpoint = 90,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+# Generate plot
+#g_heat_Multi 
+```
+
+
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, Play_Singleplayer:Play_Singleplayer)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_Single <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "light blue",  
+                       mid = "blue",  
+                       high = "dark blue",  
+                       midpoint = 10,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+# Generate plot
+#g_heat_Single
+```
+
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, Play_With_Friends:Play_With_Friends)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_Friends <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "light blue",  
+                       mid = "blue",  
+                       high = "dark blue",  
+                       midpoint = 40,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+# Generate plot
+#g_heat_Friends
+```
+
+
+```{r}
+g_heat_Multi
+g_heat_Single
+g_heat_Friends
+```
+
+Things of note:
+
+* Cluster 1: Lowest proportion for playing multiplayer. Highest proportion for playing singleplayer. Lowest proportion for playing with friends.
+
+* Cluster 3: Highest proportion for playing multiplayer. Lowest proportion for playing singleplayer. Highest proportion for playing with friends.
+
+* Cluster 2 and 4: Similar proportion values for multiplayer and single player. However, cluster 4 has a lower proportion in playing with friends (aprox 7% difference)
+
+
+
+## What do you play for
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, Play_Fun:Play_Win)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_PlayF_W <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "white",  
+                       mid = "light blue",  
+                       high = "blue",  
+                       midpoint = 30,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+# Generate plot
+#g_heat_PlayF_W
+```
+
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, Play_Relax:Play_Relax)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_PlayR <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "white",  
+                       mid = "blue",  
+                       high = "dark blue",  
+                       midpoint = 5.5,  
+                       space = "Lab", 
+                       na.value ="grey", 
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+# Generate plot
+g_heat_PlayR
+```
+
+Heatmaps for play reasons
+```{r}
+g_heat_PlayF_W
+g_heat_PlayR
+```
+
+Relax is split out because the proportion is much smaller. Putting it on another graph with a separate scale helps with clarity. Note that they are on separate scales, so large difference in color on one graph may not equate to the same values as a large color difference on the other graph.
+
+
+Notes: 
+
+* Clusters 1 and 4 have a higher proportion of playing to win.
+* Clusters 2 and 3 have a higher proportion of playing for fun.
+* Cluster 3 has the highest proportion of playing for fun and the lowest for playing to relax.
+
+
+
+## What do you play on
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, Console:Mobile)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_PlayOn <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "light blue",  
+                       mid = "blue",  
+                       high = "dark blue",  
+                       midpoint = 50,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+```
+
+```{r}
+g_heat_PlayOn
+```
+
+The proportions in each cluster are very very similar. Less than a percegent from each other. For this reason it may be easier to look at the values themselves
+
+```{r}
+Comparison_df[,c('Cluster', 'Console', 'PC', 'Mobile')]
+```
+
+There does not appear to be significant difference between the clusters.
+
+## Highest Schooling
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, No_school:Ph_D)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_deg <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "light blue",  
+                       mid = "blue",  
+                       high = "dark blue",  
+                       midpoint = 30,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+```
+
+```{r}
+g_heat_deg
+
+Comparison_df[,c('Cluster', 'Age')]
+```
+
+Looking at average age, we can expect most students to have completed high school (or the equivalent), and started/finished their Bachelors (or the equivalent). The only cluster that stands out is Cluster 3. While all of the clusters have the same median age, their mean ages vary slightly more. Median was taken instead of mean due to the high skew of the data, I didn't want the few people whom were over 60 to skew the average. However, if we look at means:
+```{r, results='hide'}
+mean_age <- mean(Clust_1$Age)
+mean_age[2] <- mean(Clust_2$Age)
+mean_age[3] <- mean(Clust_3$Age)
+mean_age[4] <- mean(Clust_4$Age)
+```
+
+```{r}
+mean_age <- cbind.data.frame(cluster, mean_age)   
+```
+
+We can see that cluster 3 has the highest mean age, however it is not a significant difference. I feel like age and highest schooling are not very distinguished between the clusters.
+
+
+## Occupation
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, Employed:Unemployed)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_Oc <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "light blue",  
+                       mid = "blue",  
+                       high = "dark blue",  
+                       midpoint = 35,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()  
+```
+
+```{r}
+g_heat_Oc
+```
+
+Looking at employment, a large proportion of each cluster are students at a university or college. Given the median age, this makes sense. I believe it is more important to look at the employment of non-students. 
+
+Notes:
+
+* Cluster 3 has the highest employed proportion and lowest unemployed proportion.
+* Cluster 1 has the lowest employed proportion and highest unemployed proportion.
+* Clusters 1 and 4 have higher proportions for unemployed
+* Clusters 3 and 4 have higher proportions for employed
+
+
+## Earnings
+```{r, results='hide'}
+# Reshape the data
+center_reshape <- gather(Comparison_df, features, values, Earn_little:Earn_living)
+# View first few rows
+head(center_reshape)
+
+# Create plot
+g_heat_earn <- ggplot(data = center_reshape,  
+                   aes(x = features, y = Cluster, fill = values)) +  
+  scale_y_continuous(breaks = seq(1, 4, by = 1)) +  
+  geom_tile() +  
+  coord_equal() +   
+  theme_set(theme_bw(base_size = 22) ) +  
+  scale_fill_gradient2(low = "light blue",  
+                       mid = "blue",  
+                       high = "dark blue",  
+                       midpoint = 4,  
+                       space = "Lab", 
+                       na.value ="grey",  
+                       guide = "colourbar",  
+                       aesthetics = "fill") +  
+  coord_flip()
+g_heat_earn
+```
+
+```{r}
+g_heat_earn
+```
+
+Since the proportions are quite small, it is best to look at the raw numbers instead of a vizual.
+
+```{r}
+Comparison_df[,c('Cluster', 'Earn_living', 'Earn_little')]
+```
+
+Notes:
+
+* Cluster 1 has the highest proportion of earning a living.
+* Cluster 2 and 3 have the lowest proportion of earning a living.
+* Cluster 4 has the highest proportion for earning a little.
+
+```{r}
+Comparison_df[,c('Cluster', 'Hours_streamed')]
+```
+
+Notes:
+
+* Cluster 1 streams the most
+* Cluster 3 streams the least
+
+I want to compare on an equal level, so I am converting to a proportion of hours spent streaming over hours spent gaming.
+
+```{r, results='hide'}
+Stream_Prop <-  round((Comparison_df$Hours_streamed/Comparison_df$Hours_played) * 100, digits = 2)
+
+Stream_Prop <- cbind.data.frame(cluster, Stream_Prop, Comparison_df$Hours_played)
+```
+
+```{r}
+Stream_Prop
+```
+
+Notes: 
+* Cluster 1 as highest stream proportion.
+* Cluster 3 has lowest stream proportion and lowest hours played.
+* Cluster 2 and 4 had equal stream proportion.
+
+
+### Analysis and Conclusion
+
+Overall, it appears that the gamer profiles could be categorized into 4 clusters. Clusters 1 and 4 are higher in anxiety and phobia (Cluster 1 being more severe) as well as having a poor satisfaction with life. Clusters 2 and 3 have lower GAD and SPIN scores. They differ in SWL scores: Cluster 2 has a neutral satisfaction with life, Cluster 3 has a high SWL score.
+
+When the clusters are joined back with their respective gamer profiles, we can see that some features vary highly and others not so much, between the clusters. 
+
+Playstyle was definitely varied for the clusters (however cluster 2 and 4 were similar on singleplayer and multiplayer preference proportions.) Cluster 1 had the lowest proportion for multiplayer and playing with friends (which is interesting given their streaming habits). Cluster 3 has the highest proportion for multiplayer and playing with friends. Clusters 2 and 4 differed mostly in paying with friends, in which cluster 4's proportion was 7% lower. It seems the clusters with higher GAD and SPIN scores have lower proportions in playing with friends.
+
+Play reason was largely varied. Personally I would have guessed that those with more anxiety would play for fun and relaxing. It seems I was right with relaxing, but they also have a high proportion for playing to win. Something I was not expecting from them. Both cluster 1 and 4 had the highest playing to win and playing for relaxing. Usually those are not attributes we would pair together. Something else odd is Cluster 3, where they are the highest proportion for playing for fun and the lowest for relaxing. Typically you would pair fun and relax. It is unique to see that play reasons I would not have assumed to be clustered together, were clustered together.
+
+There was no significant difference in platform for each cluster. So people with different scores don't seem to prefer one platform over the other. There are likely other attributes affecting this preference. For example, PC has a larger amount of games available.
+
+Highest schooling wasn't significantly different for the clusters either. Any variation is most likely due to the large range of age for each cluster. As well as the large proportion of 18 year olds in each cluster. 
+
+Occupation was interesting for the features of unemployed and employed. The student of a university or of a standard school mostly equate with the age issues mentioned previously. 
+It is interesting that the two clusters for which have the lower GAD and SPIN scores (Clusters 2 and 3) have a lower unemployment proportion. Between the two, Cluster 2 had a neutral SWL score, while Cluster 3 had a high SWL score. The cluster with the lowest proportion of unemployed gamers and highest proportion of employed gamers are the most satisfied with life. Cluster 1 has the highest proportion of unemployed gamers, and lowest proportion employed. Cluster 1 is also the cluster with the lowest SWL score and highest GAD and SPIN scores. Meaning they have anxiety, social phobias, and a poor outlook on life. It is interesting to see that interaction with their employment. I want to see if the clusters have an impact on ability to profit off of games.
+
+Another interesting note is that while cluster 4 has the second highest unemployed proportion, they also have the second highest employed proportion. This could be an interesting fact to dive in on. See if it may be impacted by other features outside of our GAD and SPIN scores.
+
+For earning, there is some interesting variance. It seems the clusters with the most anxiety (Cluster 1 and 4) have the highest proportion for earning a living through gaming. It would be interesting to see why this is the case. Is it due to feeling safer behind a screen where you can control everything, there's less interaction with the public. But then there's also the aspect of social phobia, and how does that interact with the ability to have yourself on the internet playing games. It is important to specify, the questionnaire did not specify how money was earned. In the gaming industry there are many ways you can earn money; YouTube and Twitch are just the most popular. You can be a teacher, you can boost accounts (this is when someone of a high level or rank in a game, plays on other people's accounts to increase their rank), and many many more. We do have average hours streamed, so I will give those points. But I want to mention this may or may not include youtube or other forms of publication, in which the user uploads a video instead of actively streaming. This would be an interesting point to get data on. See if clusters are more likely to pre-record or stream.
+
+Diving into hours streamed per week, it does appear that the most public-adverse cluster (Cluster 1) streams the most hours weekly. So the high anxiety levels don't appear to have a high impact on ability to stream. It may have the adverse effect, where you have the incentive to stream so that you don't have to get a job where you are in public with people. It could also be a replacement of time that more outgoing people are utilizing to go out with friends, or do activities that aren't online. 
+
+To help us look at streamed hours equally in terms of hours spent gaming, I converted them to a proportion. It looks like Cluster 1 does spend the largest proportion of their play time streaming. Cluster 3 has the lowest proportion. I would be interested in why Cluster 3 plays for the least amount and streams for the least amount. Lesser play time could be due to partaking in more social activities or a busier life (they have a higher employment rate). But for the lower proportion of streaming time (streaming time / hours played), it would be interesting to find the reasoning. One reason could be that they don't need the potential financial income from streaming. But I'm sure each person has their reasons.
